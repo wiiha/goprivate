@@ -14,7 +14,7 @@ type Note struct {
 	// deletedAt time.Time // `json:"deletedAt"`
 }
 
-func NewNote(content string) *Note {
+func newNote(content string) *Note {
 	id := nanoid.Must(15)
 	return &Note{
 		ID:      id,
@@ -55,9 +55,15 @@ func NewNoteServiceWithProductionRepo() *NoteService {
 	return NewNoteService(repo)
 }
 
+/*
+NewNote will create a note with the given content
+and stor this note in the datastore.
+
+The function returns the ID of the newly created note.
+*/
 func (svc *NoteService) NewNote(content string) (string, error) {
 
-	newNote := NewNote(content)
+	newNote := newNote(content)
 
 	err := svc.notesRepo.CreateNote(newNote)
 	if err != nil {
@@ -77,6 +83,19 @@ type NotePingResponse struct {
 	DeletedAt time.Time
 }
 
+/*
+PingNote checks if the note with the
+given ID exists and what "state" the
+note is in.
+
+States:
+
+1. Does not exist
+
+2. Exists and unread
+
+3. Exists and read
+*/
 func (svc *NoteService) PingNote(noteID string) (*NotePingResponse, error) {
 
 	deletedAt, err := svc.notesRepo.PingNote(noteID)
@@ -97,6 +116,15 @@ func (svc *NoteService) PingNote(noteID string) (*NotePingResponse, error) {
 	}, nil
 }
 
+/*
+ConsumeNote will try retrieving the note
+with the given ID. If it is successful in
+fetching the note it will also be deleted
+from the datastore. Meaning that when the
+note is returned from this function it does
+no longer exist in the database and cannot
+be retrieved agian.
+*/
 func (svc *NoteService) ConsumeNote(noteID string) (*Note, error) {
 
 	note, err := svc.notesRepo.ConsumeNote(noteID)
