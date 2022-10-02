@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"os"
 	"sync"
 
 	"github.com/mattn/go-sqlite3"
@@ -30,16 +32,41 @@ var (
 	ErrDeleteFailed = errors.New("delete failed")
 )
 
+/*
+NewSqliteDefaultRepo makes a repo
+that can be used for storing data.
+
+This function will check if a sqlite
+DB-file exists. If not it will run
+the migration process in order to
+setup the DB accordingly.
+*/
 func NewSqliteDefaultRepo() *SQLiteRepository {
-	db := database.NewDatabase("sqlite3", "file:snote.db?_foreign_keys=true")
-	return &SQLiteRepository{
+	dbName := "snote.db"
+	db := database.NewDatabase("sqlite3", "file:"+dbName+"?_foreign_keys=true")
+	repo := &SQLiteRepository{
 		db:    db,
 		mutex: sync.Mutex{},
 	}
+
+	if _, err := os.Stat(dbName); errors.Is(err, os.ErrNotExist) {
+		/*
+			No database file found.
+			We need to migrate.
+		*/
+		log.Printf("no file named `%s`, migrating", dbName)
+		err := repo.Migrate()
+		if err != nil {
+			log.Fatalf("migrating: %v", err)
+		}
+	}
+
+	return repo
 }
 
 func NewSqliteTestRepo() *SQLiteRepository {
-	db := database.NewDatabase("sqlite3", "file:test.db?_foreign_keys=true")
+	dbName := "test.db"
+	db := database.NewDatabase("sqlite3", "file:"+dbName+"?_foreign_keys=true")
 	return &SQLiteRepository{
 		db: db,
 	}
