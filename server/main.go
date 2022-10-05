@@ -34,7 +34,7 @@ func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 		The landing page must be specified as
 		a file in order to not create a
 		`/*filepath` wildcard route that would
-		consume all other routes.
+		conflict with all other routes.
 	*/
 	router.StaticFileFS("/", "./", fsLandigPage())
 
@@ -62,16 +62,24 @@ func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 	/*
 		API for backend
 	*/
+
+	/*
+		Check if API is alive
+	*/
 	router.GET("api/v1/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
 
+	/*
+		Create a new note. The received content is already
+		expected to be encrypted.
+	*/
 	router.POST("api/v1/newnote", func(c *gin.Context) {
 		var newNote NewNote
 		if err := c.ShouldBindJSON(&newNote); err != nil {
-			c.String(http.StatusBadRequest, "Field noteContent is invalid")
+			c.String(http.StatusBadRequest, "field noteContent is invalid")
 			return
 		}
 
@@ -85,6 +93,10 @@ func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 		c.JSON(http.StatusOK, gin.H{"noteID": noteID})
 	})
 
+	/*
+		Used to check if a note exists without fetching
+		the actual note.
+	*/
 	router.GET("api/v1/pingnote/:noteid", func(c *gin.Context) {
 		noteID := c.Param("noteid")
 
@@ -98,6 +110,11 @@ func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 		c.JSON(http.StatusOK, pingRes)
 	})
 
+	/*
+		When a note is returned by this route it has been
+		removed from the database and there is no way to
+		recover the previous content of the note.
+	*/
 	router.DELETE("api/v1/consumenote/:noteid", func(c *gin.Context) {
 		noteID := c.Param("noteid")
 
@@ -140,6 +157,10 @@ func (s *Server) ListenAndServe() error {
 	return nil
 }
 
+/*
+struct NewNote is used for binding to the
+json post request representing a new note.
+*/
 type NewNote struct {
 	NoteContent string `json:"noteContent" binding:"required"`
 }
