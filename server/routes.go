@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,19 @@ func registerRoutesToRouter(router *gin.Engine) error {
 		the registered route will be `/assets/*filepath`.
 	*/
 	router.StaticFS("/assets", fsAssetsDir())
+
+	/*
+		This route is used to read a message. Actual fetching
+		of the message will be handled by the frontend.
+		This route exists in order to emulate a single
+		page application.
+	*/
+	router.GET("/read/:messageid", func(c *gin.Context) {
+		messageid := c.Param("messageid")
+		log.Printf("(debug) messageid: %v", messageid)
+
+		c.FileFromFS("./", fsLandigPage())
+	})
 
 	/*
 		API for backend
