@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wiiha/goprivate/snote"
 )
 
 type Server struct {
-	addr       string
 	httpServer *http.Server
 }
 
@@ -23,13 +23,71 @@ The returned Server struct has a ListenAndServe
 method which should be invoked in order for
 the server to start.
 */
-func NewServer(addressAndPort string) *Server {
+func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 	router := gin.Default()
 
-	err := registerRoutesToRouter(router)
-	if err != nil {
-		log.Fatalf("registering routes: %v", err)
-	}
+	/***
+		Register routes to router
+	***/
+
+	/*
+		The landing page must be specified as
+		a file in order to not create a
+		`/*filepath` wildcard route that would
+		consume all other routes.
+	*/
+	router.StaticFileFS("/", "./", fsLandigPage())
+
+	/*
+		The assets folder contains multiple files
+		and is therefore served as a FS rather than
+		a specific set of files. This works since
+		the registered route will be `/assets/*filepath`.
+	*/
+	router.StaticFS("/assets", fsAssetsDir())
+
+	/*
+		This route is used to read a message. Actual fetching
+		of the message will be handled by the frontend.
+		This route exists in order to emulate a single
+		page application.
+	*/
+	router.GET("/read/:messageid", func(c *gin.Context) {
+		messageid := c.Param("messageid")
+		log.Printf("(debug) messageid: %v", messageid)
+
+		c.FileFromFS("./", fsLandigPage())
+	})
+
+	/*
+		API for backend
+	*/
+	router.GET("api/v1/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+
+	router.POST("api/v1/newnote", func(c *gin.Context) {
+		var newNote NewNote
+		if err := c.ShouldBindJSON(&newNote); err != nil {
+			c.String(http.StatusBadRequest, "Field noteContent is invalid")
+			return
+		}
+
+		noteID, err := noteSVC.NewNote(newNote.NoteContent)
+		if err != nil {
+			log.Printf("(error) api/v1/newnote: %v", err)
+			c.String(http.StatusInternalServerError, "something went wrong")
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"noteID": noteID})
+	})
+
+	/***
+		END register routes
+	***/
 
 	s := &http.Server{
 		Addr:         addressAndPort,
@@ -39,7 +97,6 @@ func NewServer(addressAndPort string) *Server {
 	}
 
 	return &Server{
-		addr:       addressAndPort,
 		httpServer: s,
 	}
 }
@@ -51,4 +108,8 @@ func (s *Server) ListenAndServe() error {
 		return fmt.Errorf("ListenAndServe: %v", err)
 	}
 	return nil
+}
+
+type NewNote struct {
+	NoteContent string `json:"noteContent" binding:"required"`
 }
