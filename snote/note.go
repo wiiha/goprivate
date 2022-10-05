@@ -78,9 +78,9 @@ NotePingResponse will be the
 response when calling PingNote
 */
 type NotePingResponse struct {
-	Exists    bool
-	Deleted   bool
-	DeletedAt time.Time
+	Exists    bool      `json:"exists"`
+	Deleted   bool      `json:"consumed"`
+	DeletedAt time.Time `json:"consumedAt"`
 }
 
 /*

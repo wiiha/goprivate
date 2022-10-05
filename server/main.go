@@ -85,6 +85,19 @@ func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 		c.JSON(http.StatusOK, gin.H{"noteID": noteID})
 	})
 
+	router.GET("api/v1/pingnote/:noteid", func(c *gin.Context) {
+		noteID := c.Param("noteid")
+
+		pingRes, err := noteSVC.PingNote(noteID)
+		if err != nil {
+			log.Printf("(error) api/v1/pingnote/%s: %v", noteID, err)
+			c.String(http.StatusInternalServerError, "something went wrong")
+			return
+		}
+
+		c.JSON(http.StatusOK, pingRes)
+	})
+
 	/***
 		END register routes
 	***/
