@@ -98,6 +98,23 @@ func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 		c.JSON(http.StatusOK, pingRes)
 	})
 
+	router.DELETE("api/v1/consumenote/:noteid", func(c *gin.Context) {
+		noteID := c.Param("noteid")
+
+		consumedNote, err := noteSVC.ConsumeNote(noteID)
+		if err != nil {
+			if err == snote.ErrNotExists {
+				c.String(http.StatusBadRequest, "note does not exist")
+				return
+			}
+			log.Printf("(error) api/v1/consume/%s: %v", noteID, err)
+			c.String(http.StatusInternalServerError, "something went wrong")
+			return
+		}
+
+		c.JSON(http.StatusOK, consumedNote)
+	})
+
 	/***
 		END register routes
 	***/
