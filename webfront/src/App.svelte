@@ -1,5 +1,6 @@
 <script lang="ts">
    import NewNote from "./lib/NewNote.svelte"
+   import ConsumeNote from "./lib/ConsumeNote.svelte"
    import goprivate from "./lib/goprivate.api"
 
    console.log("MODE: ", import.meta.env.MODE)
@@ -13,12 +14,14 @@
 
    let urlPath = window.location.pathname
 
-   if (urlPath.startsWith("/read/")) console.log("yeap!")
+   if (urlPath.startsWith("/read/")) currentPage = pageConsume
 </script>
 
 <main>
    {#if currentPage == pageLanding}
       <NewNote />
+      {:else if currentPage == pageConsume}
+      <ConsumeNote />
    {/if}
 </main>
 

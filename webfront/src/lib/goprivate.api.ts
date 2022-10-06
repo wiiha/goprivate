@@ -51,5 +51,39 @@ export default {
       let json = await resp.json()
       json["key"] = "KEY_FOR_ENCRYPTION"
       return json
+   },
+
+   /* 
+   Ping note to see if the given noteID
+   is valid.
+   */
+   pingNote: async function (
+      noteID: string
+   ): Promise<{ exists: boolean; consumed: boolean; consumedAt: string }> {
+      const resp = await fetch(`${apiBase}/pingnote/${noteID}`, {
+         method: "GET",
+         headers: {
+            // Authorization: `Bearer ${getToken()}`
+         }
+      })
+      if (resp.status !== 200) {
+         throw resp
+      }
+      const jsonRes = await resp.json()
+      return jsonRes
+   },
+
+   consumeNote: async function (
+      noteID: string
+   ): Promise<{ id: string; content: string }> {
+      const resp = await fetch(`${apiBase}/consumenote/${noteID}`, {
+         method: "DELETE",
+         headers: {}
+      })
+      if (resp.status !== 200) {
+         throw resp
+      }
+      const json = await resp.json()
+      return json
    }
 }

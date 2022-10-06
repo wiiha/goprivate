@@ -2,7 +2,7 @@
    import goprivate from "./goprivate.api"
 
    let clearTextMsg = ""
-   let urlForCreatedNote = "asd"
+   let urlForCreatedNote = ""
 
    const submitNote = async (e: SubmitEvent) => {
       console.log("got form submit", { event: e })
@@ -12,7 +12,7 @@
          const res = await goprivate.newNote(clearTextMsg)
          console.log({ res })
          clearTextMsg = ""
-         urlForCreatedNote = `${document.location.href}/read/${res.noteID}#${res.key}`
+         urlForCreatedNote = `${document.location.href}read/${res.noteID}#${res.key}`
       } catch (error) {
          console.log({ error })
       }
