@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/wiiha/goprivate/snote"
 )
@@ -25,6 +26,25 @@ the server to start.
 */
 func NewServer(addressAndPort string, noteSVC *snote.NoteService) *Server {
 	router := gin.Default()
+
+	/***
+	Middleware
+	***/
+
+	/*
+		[ ] NEEDS to check these before production.
+	*/
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"POST, OPTIONS, GET, DELETE"},
+		AllowHeaders:     []string{"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		// AllowOriginFunc: func(origin string) bool {
+		// 	return origin == "https://github.com"
+		// },
+		// MaxAge: 12 * time.Hour,
+	}))
 
 	/***
 		Register routes to router
