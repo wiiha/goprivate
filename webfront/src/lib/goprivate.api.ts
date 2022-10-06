@@ -31,7 +31,7 @@ export default {
    */
    newNote: async function (
       clearTextContent: string
-   ): Promise<{ noteID: string; key: string }> {
+   ): Promise<{ noteID: string; }> {
       /* 
     [ ] NEEDS to encrypt note content
     */
@@ -49,7 +49,6 @@ export default {
          throw resp
       }
       let json = await resp.json()
-      json["key"] = "KEY_FOR_ENCRYPTION"
       return json
    },
 

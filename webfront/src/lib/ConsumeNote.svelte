@@ -1,5 +1,6 @@
 <script lang="ts">
    import goprivate from "./goprivate.api"
+   import ed from "./encdecrypt"
    import { onMount } from "svelte"
 
    let notePingInfo:
@@ -16,15 +17,22 @@
       .replace(decryptionKey, "")
    console.log({ decryptionKey, noteID })
 
-   onMount(async () => {
+   const pingNote = async () => {
       const res = await goprivate.pingNote(noteID)
       notePingInfo = res
       console.log({ notePingInfo })
+   }
+
+   onMount(async () => {
+      await pingNote()
    })
 
    const consumeNote = async (nid: string) => {
-      const note = await goprivate.consumeNote(nid)
-      noteContent = note.content
+      const { content } = await goprivate.consumeNote(nid)
+      const [iv, encryptedMessage] = content.split("$")
+      const message = ed.decrypt(encryptedMessage, decryptionKey, iv)
+      noteContent = message
+      pingNote()
    }
 </script>
 
