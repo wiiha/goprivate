@@ -32,9 +32,6 @@ export default {
    newNote: async function (
       clearTextContent: string
    ): Promise<{ noteID: string; }> {
-      /* 
-    [ ] NEEDS to encrypt note content
-    */
 
       const resp = await fetch(`${apiBase}/newnote`, {
          method: "POST",
