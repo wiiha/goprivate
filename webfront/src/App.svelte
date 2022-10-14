@@ -6,7 +6,7 @@
 
    // Mini router setup
    const pageLanding = "landing"
-//    const pagePing = "ping"
+   //    const pagePing = "ping"
    const pageConsume = "consume"
    let currentPage = pageLanding
    // end router setup
@@ -16,13 +16,37 @@
    if (urlPath.startsWith("/read/")) currentPage = pageConsume
 </script>
 
+<header>
+   <h1>
+      <b> GoPrivate </b>
+   </h1>
+</header>
+
+<hr class="m-0" />
+
 <main>
+   <article>
+      <aside>
+         <p>This is a short text describing the service.</p>
+      </aside>
+   </article>
+
    {#if currentPage == pageLanding}
       <NewNote />
    {:else if currentPage == pageConsume}
       <ConsumeNote />
    {/if}
 </main>
+
+<hr class="m-0" />
+
+<footer>
+   <p>
+      <i>
+         <mark>This is the footer area</mark>
+      </i>
+   </p>
+</footer>
 
 <style>
 </style>
