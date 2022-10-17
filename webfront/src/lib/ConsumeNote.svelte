@@ -58,7 +58,10 @@
                <p>{`Consumed: ${notePingInfo.consumed}`}</p>
                <p>{`Consumed at: ${notePingInfo.consumedAt}`}</p>
             {/if}
-            {#if missingKeyInUrl}
+            {#if !notePingInfo.exists}
+               <p><b>This note does not exist.</b></p>
+            {/if}
+            {#if notePingInfo.exists && missingKeyInUrl}
                <p><b>Important</b></p>
                <p>
                   Please enter the password. The author should have given it to
