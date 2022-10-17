@@ -1,9 +1,11 @@
 <script lang="ts">
    import goprivate from "./goprivate.api"
    import ed from "./encdecrypt"
+   import emojiHandler from "./emojiHandler"
 
    let clearTextMsg = ""
    let urlForCreatedNote = ""
+   let messageContainsEmojis = false
    let linkCopiedToClipboard = false
    let usingUserDefinedPassword = false
    let userDefinedPassword = ""
@@ -28,43 +30,57 @@
       }
    }
 
-   $: console.log({ usingUserDefinedPassword, userDefinedPassword })
+   $: {
+      messageContainsEmojis = emojiHandler.containsEmojis(clearTextMsg)
+   }
 </script>
 
 <article>
    <h1>New Note</h1>
-   <form on:submit|preventDefault={submitNote}>
-      <textarea
-         bind:value={clearTextMsg}
-         style="resize: vertical;"
-         cols="30"
-         rows="10"
-      />
-      <div>
-         <input
-            bind:checked={usingUserDefinedPassword}
-            class="m-0"
-            type="checkbox"
-            name="passwordOption"
-            id="passwordOption"
+   {#if urlForCreatedNote === ""}
+      <form on:submit|preventDefault={submitNote}>
+         <textarea
+            bind:value={clearTextMsg}
+            style="resize: vertical;"
+            cols="30"
+            rows="10"
          />
-         <label class="m-0" for="passwordOption"
-            ><b>Set own password</b></label
-         >
-      </div>
-      {#if usingUserDefinedPassword}
+         <div>
+            <input
+               bind:checked={usingUserDefinedPassword}
+               class="m-0"
+               type="checkbox"
+               name="passwordOption"
+               id="passwordOption"
+            />
+            <label class="m-0" for="passwordOption"
+               ><b>Set own password</b></label
+            >
+         </div>
+         {#if usingUserDefinedPassword}
+            <p>
+               <b>NB:</b>When setting your own password it will not be part of
+               the generated link. You are expected to share it with the message
+               recipient what ever way you see fit.
+            </p>
+            <label for="userPassword"><b>Password to use:</b></label>
+            <input
+               bind:value={userDefinedPassword}
+               type="text"
+               name="userPassword"
+               id="userPassword"
+            />
+         {/if}
          <br />
-         <label for="userPassword"><b>Password to use:</b></label>
-         <input
-            bind:value={userDefinedPassword}
-            type="text"
-            name="userPassword"
-            id="userPassword"
-         />
-      {/if}
-      <br />
-      <button on:click|stopPropagation type="submit">Create note</button>
-   </form>
+         {#if messageContainsEmojis}
+            <p><b>NB: As of now, your message cannot contain emojis.</b></p>
+            <p>Remove them in order to submit the note.</p>
+         {/if}
+         {#if !messageContainsEmojis}
+            <button on:click|stopPropagation type="submit">Create note</button>
+         {/if}
+      </form>
+   {/if}
    <br />
    {#if urlForCreatedNote !== ""}
       <form on:submit|preventDefault={() => {}}>
@@ -82,7 +98,7 @@
             value={urlForCreatedNote}
          />
          {#if linkCopiedToClipboard}
-            <p>Link is copied to clipboard!</p>
+            <p><mark>Link is copied to clipboard!</mark></p>
          {/if}
       </form>
    {/if}

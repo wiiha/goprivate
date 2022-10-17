@@ -7,6 +7,7 @@
       | undefined
       | { exists: boolean; consumed: boolean; consumedAt: string } = undefined
    let noteContent = ""
+   let noteContentIsValid = true
    let missingKeyInUrl = false
    let userDefinedPassword = ""
 
@@ -34,14 +35,15 @@
       if (missingKeyInUrl && userDefinedPassword === "") return
       const { content } = await goprivate.consumeNote(nid)
       const [iv, encryptedMessage] = content.split("$")
-      const message = missingKeyInUrl
+      const res = missingKeyInUrl
          ? await ed.decryptWithPassword(
               encryptedMessage,
               userDefinedPassword,
               iv
            )
          : await ed.decrypt(encryptedMessage, decryptionKey, iv)
-      noteContent = message
+      noteContent = res.message
+      noteContentIsValid = res.messageIsValid
       missingKeyInUrl = false
       pingNote()
    }
@@ -61,7 +63,7 @@
             {#if !notePingInfo.exists}
                <p><b>This note does not exist.</b></p>
             {/if}
-            {#if notePingInfo.exists && missingKeyInUrl}
+            {#if notePingInfo.exists && !notePingInfo.consumed && missingKeyInUrl}
                <p><b>Important</b></p>
                <p>
                   Please enter the password. The author should have given it to
@@ -85,6 +87,16 @@
       <section>
          <aside>
             <h2>Note</h2>
+            {#if !noteContentIsValid}
+               <p>
+                  <mark
+                     >Clear text message could not be validated. You might have
+                     entered the wrong key. This cannot be reversed, the message
+                     is lost.
+                  </mark>
+               </p>
+               <p>Decrypted but invalid message:</p>
+            {/if}
             <p>{noteContent}</p>
          </aside>
       </section>

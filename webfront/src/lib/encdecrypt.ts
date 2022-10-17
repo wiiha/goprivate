@@ -21,6 +21,25 @@ const depadd = (paddedText: string): string => {
    return paddedText.replace(re, "")
 }
 
+const validationString = "hello-goprivate "
+
+const addClearTextValidation = (text: string): string => {
+   return `${validationString}${text}`
+}
+
+const validateClearText = (
+   text: string
+): {
+   validText: boolean
+   validatedText: string
+} => {
+   const validationRE = new RegExp(`^${validationString}`)
+   const validText = validationRE.test(text)
+   const validatedText = text.replace(validationRE, "")
+
+   return { validText, validatedText }
+}
+
 const newEncryptionKey = async () => {
    const key = await window.crypto.subtle.generateKey(
       {
@@ -78,7 +97,9 @@ const _encrypt = async (
    keyHex: string
 }> => {
    const iv = window.crypto.getRandomValues(new Uint8Array(16))
-   const paddedMessage = padding(message, 16)
+   const messageWithValidation = addClearTextValidation(message)
+   console.log({ messageWithValidation })
+   const paddedMessage = padding(messageWithValidation, 16)
    console.log({ paddedMessage })
 
    let textBytes = aesjs.utils.utf8.toBytes(paddedMessage)
@@ -96,11 +117,16 @@ const _encrypt = async (
    }
 }
 
+type MessageWithValidationCheck = {
+   messageIsValid: boolean
+   message: string
+}
+
 const _decrypt = (
    encryptedHex: string,
    keyHex: string,
    ivHex: string
-): string => {
+): MessageWithValidationCheck => {
    const encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex)
    const iv = aesjs.utils.hex.toBytes(ivHex)
    const key = aesjs.utils.hex.toBytes(keyHex)
@@ -109,7 +135,13 @@ const _decrypt = (
    const decryptedBytes = aesCbc.decrypt(encryptedBytes)
 
    // Convert our bytes back into text
-   return depadd(aesjs.utils.utf8.fromBytes(decryptedBytes))
+   const { validText, validatedText } = validateClearText(
+      depadd(aesjs.utils.utf8.fromBytes(decryptedBytes))
+   )
+   return {
+      messageIsValid: validText,
+      message: validatedText
+   }
 }
 
 const encrypt = async (
@@ -127,7 +159,7 @@ const decrypt = async (
    encryptedHex: string,
    keyHex: string,
    ivHex: string
-): Promise<string> => {
+): Promise<MessageWithValidationCheck> => {
    return _decrypt(encryptedHex, keyHex, ivHex)
 }
 
@@ -135,7 +167,7 @@ const decryptWithPassword = async (
    encryptedHex: string,
    password: string,
    ivHex: string
-): Promise<string> => {
+): Promise<MessageWithValidationCheck> => {
    const key = await encryptionKeyFromPassword(password)
    const keyHex = aesjs.utils.hex.fromBytes(key)
    return _decrypt(encryptedHex, keyHex, ivHex)
