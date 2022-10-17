@@ -18,7 +18,7 @@
 
 <header>
    <h1>
-      <b> GoPrivate </b>
+      <b>GoPrivate</b>
    </h1>
 </header>
 
