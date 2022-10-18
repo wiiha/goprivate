@@ -1,0 +1,6 @@
+.DS_Store
+sqlite3.db
+test.db
+snote.db
+server/webfront
+goprivate
